@@ -1,0 +1,6 @@
+# Testcontainers provides datasource & Redis via @DynamicPropertySource.
+# This file only holds test-profile overrides.
+logging:
+  level:
+    com.nazir.urlshortener: DEBUG
+    org.testcontainers: INFO

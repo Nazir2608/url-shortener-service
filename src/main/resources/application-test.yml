@@ -1,0 +1,11 @@
+spring:
+  jpa:
+    show-sql: false
+  flyway:
+    clean-disabled: false
+
+logging:
+  level:
+    com.nazir.urlshortener: DEBUG
+    org.testcontainers: INFO
+    org.flywaydb: WARN
