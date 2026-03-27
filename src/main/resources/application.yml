@@ -1,6 +1,8 @@
 spring:
   application:
     name: url-shortener-service
+  profiles:
+    active: dev
 
   jpa:
     open-in-view: false
@@ -8,7 +10,6 @@ spring:
       ddl-auto: validate
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
         jdbc:
           time_zone: UTC
@@ -22,18 +23,25 @@ spring:
     virtual:
       enabled: true
 
-  jackson:
-    default-property-inclusion: non_null
-    serialization:
-      write-dates-as-timestamps: false
-
 server:
   port: 8080
-  servlet:
-    context-path: /
-  compression:
-    enabled: true
+  error:
+    include-message: always
+    include-binding-errors: always
 
+# Custom application properties
+app:
+  base-url: http://localhost:${server.port}
+  slug:
+    default-length: 7
+    min-custom-length: 3
+    max-custom-length: 20
+  bulk:
+    max-size: 100
+  cors:
+    allowed-origins: http://localhost:3000,http://localhost:5173
+
+# Actuator
 management:
   endpoints:
     web:
@@ -41,21 +49,13 @@ management:
         include: health,info,metrics,prometheus
   endpoint:
     health:
-      show-details: when_authorized
+      show-details: when-authorized
 
+# OpenAPI / Swagger
 springdoc:
   api-docs:
     path: /api-docs
   swagger-ui:
     path: /swagger-ui.html
     operations-sorter: method
-
-# ── custom app properties ──
-app:
-  base-url: http://localhost:8080
-  slug:
-    default-length: 7
-    max-custom-length: 20
-    min-custom-length: 3
-  cors:
-    allowed-origins: http://localhost:3000,http://localhost:5173
+    tags-sorter: alpha
