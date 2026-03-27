@@ -1,6 +1,14 @@
-# Testcontainers provides datasource & Redis via @DynamicPropertySource.
-# This file only holds test-profile overrides.
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/urlshortener
+    username: postgres
+    password: postgres
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
 logging:
   level:
     com.nazir.urlshortener: DEBUG
-    org.testcontainers: INFO
