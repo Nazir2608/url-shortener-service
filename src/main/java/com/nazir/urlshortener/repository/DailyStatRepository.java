@@ -13,7 +13,7 @@ import java.util.UUID;
 public interface DailyStatRepository extends JpaRepository<DailyStat, Long> {
 
     List<DailyStat> findByShortUrlIdAndStatDateBetween(
-            UUID shortUrlId, LocalDate start, LocalDate end);
+        UUID shortUrlId, LocalDate start, LocalDate end);
 
     Optional<DailyStat> findByShortUrlIdAndStatDate(UUID shortUrlId, LocalDate date);
 }

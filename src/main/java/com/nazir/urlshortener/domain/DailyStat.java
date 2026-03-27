@@ -7,7 +7,7 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "daily_stats",
-       uniqueConstraints = @UniqueConstraint(columnNames = {"short_url_id", "stat_date"}))
+    uniqueConstraints = @UniqueConstraint(columnNames = {"short_url_id", "stat_date"}))
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

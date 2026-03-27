@@ -20,75 +20,63 @@ public interface ClickEventRepository extends JpaRepository<ClickEvent, Long> {
     Page<ClickEvent> findByShortUrlIdOrderByClickedAtDesc(UUID shortUrlId, Pageable pageable);
 
     List<ClickEvent> findByShortUrlIdAndClickedAtBetween(
-            UUID shortUrlId, LocalDateTime start, LocalDateTime end);
+        UUID shortUrlId, LocalDateTime start, LocalDateTime end);
 
     @Query("""
-            SELECT c.country, COUNT(c) as cnt
-            FROM ClickEvent c
-            WHERE c.shortUrl.id = :urlId
-              AND c.clickedAt BETWEEN :start AND :end
-            GROUP BY c.country
-            ORDER BY cnt DESC
-            """)
-    List<Object[]> countByCountry(@Param("urlId") UUID urlId,
-                                  @Param("start") LocalDateTime start,
-                                  @Param("end") LocalDateTime end);
+        SELECT c.country, COUNT(c) as cnt
+        FROM ClickEvent c
+        WHERE c.shortUrl.id = :urlId
+          AND c.clickedAt BETWEEN :start AND :end
+        GROUP BY c.country
+        ORDER BY cnt DESC
+        """)
+    List<Object[]> countByCountry(@Param("urlId") UUID urlId, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     @Query("""
-            SELECT c.deviceType, COUNT(c) as cnt
-            FROM ClickEvent c
-            WHERE c.shortUrl.id = :urlId
-              AND c.clickedAt BETWEEN :start AND :end
-            GROUP BY c.deviceType
-            ORDER BY cnt DESC
-            """)
-    List<Object[]> countByDeviceType(@Param("urlId") UUID urlId,
-                                     @Param("start") LocalDateTime start,
-                                     @Param("end") LocalDateTime end);
+        SELECT c.deviceType, COUNT(c) as cnt
+        FROM ClickEvent c
+        WHERE c.shortUrl.id = :urlId
+          AND c.clickedAt BETWEEN :start AND :end
+        GROUP BY c.deviceType
+        ORDER BY cnt DESC
+        """)
+    List<Object[]> countByDeviceType(@Param("urlId") UUID urlId, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     @Query("""
-            SELECT c.referrerDomain, COUNT(c) as cnt
-            FROM ClickEvent c
-            WHERE c.shortUrl.id = :urlId
-              AND c.clickedAt BETWEEN :start AND :end
-            GROUP BY c.referrerDomain
-            ORDER BY cnt DESC
-            """)
-    List<Object[]> countByReferrerDomain(@Param("urlId") UUID urlId,
-                                         @Param("start") LocalDateTime start,
-                                         @Param("end") LocalDateTime end);
+        SELECT c.referrerDomain, COUNT(c) as cnt
+        FROM ClickEvent c
+        WHERE c.shortUrl.id = :urlId
+          AND c.clickedAt BETWEEN :start AND :end
+        GROUP BY c.referrerDomain
+        ORDER BY cnt DESC
+        """)
+    List<Object[]> countByReferrerDomain(@Param("urlId") UUID urlId, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     @Query("""
-            SELECT c.browserName, COUNT(c) as cnt
-            FROM ClickEvent c
-            WHERE c.shortUrl.id = :urlId
-              AND c.clickedAt BETWEEN :start AND :end
-            GROUP BY c.browserName
-            ORDER BY cnt DESC
-            """)
-    List<Object[]> countByBrowser(@Param("urlId") UUID urlId,
-                                  @Param("start") LocalDateTime start,
-                                  @Param("end") LocalDateTime end);
+        SELECT c.browserName, COUNT(c) as cnt
+        FROM ClickEvent c
+        WHERE c.shortUrl.id = :urlId
+          AND c.clickedAt BETWEEN :start AND :end
+        GROUP BY c.browserName
+        ORDER BY cnt DESC
+        """)
+    List<Object[]> countByBrowser(@Param("urlId") UUID urlId, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     @Query("""
-            SELECT CAST(c.clickedAt AS LocalDate), COUNT(c)
-            FROM ClickEvent c
-            WHERE c.shortUrl.id = :urlId
-              AND c.clickedAt BETWEEN :start AND :end
-            GROUP BY CAST(c.clickedAt AS LocalDate)
-            ORDER BY CAST(c.clickedAt AS LocalDate)
-            """)
-    List<Object[]> countDailyClicks(@Param("urlId") UUID urlId,
-                                    @Param("start") LocalDateTime start,
-                                    @Param("end") LocalDateTime end);
+        SELECT CAST(c.clickedAt AS LocalDate), COUNT(c)
+        FROM ClickEvent c
+        WHERE c.shortUrl.id = :urlId
+          AND c.clickedAt BETWEEN :start AND :end
+        GROUP BY CAST(c.clickedAt AS LocalDate)
+        ORDER BY CAST(c.clickedAt AS LocalDate)
+        """)
+    List<Object[]> countDailyClicks(@Param("urlId") UUID urlId, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     @Query("""
-            SELECT COUNT(DISTINCT c.ipAddress)
-            FROM ClickEvent c
-            WHERE c.shortUrl.id = :urlId
-              AND c.clickedAt BETWEEN :start AND :end
-            """)
-    long countUniqueVisitors(@Param("urlId") UUID urlId,
-                             @Param("start") LocalDateTime start,
-                             @Param("end") LocalDateTime end);
+        SELECT COUNT(DISTINCT c.ipAddress)
+        FROM ClickEvent c
+        WHERE c.shortUrl.id = :urlId
+          AND c.clickedAt BETWEEN :start AND :end
+        """)
+    long countUniqueVisitors(@Param("urlId") UUID urlId, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }

@@ -19,10 +19,10 @@ public class HealthController {
     @Operation(summary = "Health check", description = "Returns service status and metadata")
     public ResponseEntity<Map<String, Object>> health() {
         return ResponseEntity.ok(Map.of(
-                "status", "UP",
-                "service", "url-shortener-service",
-                "javaVersion", System.getProperty("java.version"),
-                "timestamp", LocalDateTime.now().toString()
+            "status", "UP",
+            "service", "url-shortener-service",
+            "javaVersion", System.getProperty("java.version"),
+            "timestamp", LocalDateTime.now().toString()
         ));
     }
 }

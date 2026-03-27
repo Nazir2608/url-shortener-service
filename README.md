@@ -484,7 +484,7 @@ url-shortener-service/
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-username/url-shortener-service.git
+git clone https://github.com/Nazir2608/url-shortener-service.git
 cd url-shortener-service
 
 # 2. Generate Maven wrapper (one-time setup)
