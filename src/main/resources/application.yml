@@ -36,8 +36,10 @@ app:
     default-length: 7
     min-custom-length: 3
     max-custom-length: 20
-  bulk:
-    max-size: 100
+  cache:
+    url-ttl-hours: 24                           # Cached slug→URL TTL
+    analytics-ttl-minutes: 5                    # Cached analytics response TTL
+    key-prefix: "urlshortener:"                 # Redis key namespace prefix
   cors:
     allowed-origins: http://localhost:3000,http://localhost:5173
 
