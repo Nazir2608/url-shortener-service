@@ -6,6 +6,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -68,8 +69,14 @@ public class ShortUrl {
 
     // ── domain helpers ──
 
+    /**
+     * Checks if this URL has expired by time or click limit.
+     */
     public boolean isExpired() {
-        return expiresAt != null && LocalDateTime.now().isAfter(expiresAt);
+        if (expiresAt != null && Instant.now().isAfter(Instant.from(expiresAt))) {
+            return true;
+        }
+        return maxClicks != null && clickCount >= maxClicks;
     }
 
     public boolean hasReachedMaxClicks() {

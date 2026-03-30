@@ -12,8 +12,11 @@ import java.util.UUID;
 @Repository
 public interface DailyStatRepository extends JpaRepository<DailyStat, Long> {
 
-    List<DailyStat> findByShortUrlIdAndStatDateBetween(
-        UUID shortUrlId, LocalDate start, LocalDate end);
+    Optional<DailyStat> findByShortUrlIdAndDate(UUID shortUrlId, LocalDate date);
 
-    Optional<DailyStat> findByShortUrlIdAndStatDate(UUID shortUrlId, LocalDate date);
+    List<DailyStat> findByShortUrlIdAndDateBetweenOrderByDateAsc(
+        UUID shortUrlId, LocalDate from, LocalDate to
+    );
+
+    void deleteByDateBefore(LocalDate date);
 }
