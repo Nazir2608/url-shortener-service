@@ -9,3 +9,7 @@ logging:
     com.nazir.urlshortener: DEBUG
     org.testcontainers: INFO
     org.flywaydb: WARN
+
+# Disable GeoIP in tests (no .mmdb file needed for unit tests)
+geoip:
+  enabled: false

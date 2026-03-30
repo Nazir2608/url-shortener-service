@@ -1,107 +1,140 @@
 package com.nazir.urlshortener.controller;
-
-import com.nazir.urlshortener.dto.response.LinkPreviewResponse;
-import com.nazir.urlshortener.service.RedirectService;
-import io.swagger.v3.oas.annotations.Hidden;
+import com.nazir.urlshortener.domain.enums.Granularity;
+import com.nazir.urlshortener.dto.response.*;
+import com.nazir.urlshortener.service.AnalyticsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.net.URI;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 
-/**
- * Handles short URL redirection — the HOT PATH.
- * <p>
- * Routes:
- * <ul>
- *   <li>{@code GET /{slug}} → 302 redirect to original URL</li>
- *   <li>{@code GET /{slug}+} → 200 link preview (no redirect, no click counted)</li>
- * </ul>
- * <p>
- * Performance target: &lt; 50ms (cache hit), &lt; 100ms (cache miss).
- * </p>
- */
 @RestController
-@Tag(name = "Redirect", description = "Short URL redirection and preview")
-public class RedirectController {
+@RequestMapping("/api/v1/urls/{slug}/analytics")
+@Tag(name = "Analytics", description = "Click analytics for shortened URLs")
+public class AnalyticsController {
 
-    private static final Logger log = LoggerFactory.getLogger(RedirectController.class);
+    private final AnalyticsService analyticsService;
 
-    private final RedirectService redirectService;
-
-    public RedirectController(RedirectService redirectService) {
-        this.redirectService = redirectService;
+    public AnalyticsController(AnalyticsService analyticsService) {
+        this.analyticsService = analyticsService;
     }
 
-    /**
-     * Redirect or preview a short URL.
-     * <p>
-     * If the slug ends with '+', returns a preview instead of redirecting.
-     * Otherwise, performs a 302 redirect and counts a click.
-     * </p>
-     *
-     * @param slug the short URL slug (optionally ending with '+' for preview)
-     * @return 302 redirect or 200 preview
-     */
-    @GetMapping("/{slug}")
-    @Operation(summary = "Redirect to original URL",
-        description = "Resolves the slug and redirects (302) to the original URL. " +
-            "Append '+' to the slug for a preview without redirecting.")
-    @ApiResponses({
-        @ApiResponse(responseCode = "302", description = "Redirect to original URL"),
-        @ApiResponse(responseCode = "200", description = "Link preview (when slug ends with '+')"),
-        @ApiResponse(responseCode = "404", description = "Slug not found"),
-        @ApiResponse(responseCode = "410", description = "Link has expired or is deactivated")
-    })
-    public ResponseEntity<?> handleSlug(
-        @Parameter(description = "Short URL slug. Append '+' for preview.",
-            example = "abc123")
-        @PathVariable String slug) {
+    // ═══ SUMMARY ═══
 
-        // ── Preview mode: slug ends with '+' ──
-        if (slug.endsWith("+")) {
-            String actualSlug = slug.substring(0, slug.length() - 1);
-            log.debug("Preview request for slug: {}", actualSlug);
-            LinkPreviewResponse preview = redirectService.getPreview(actualSlug);
-            return ResponseEntity.ok(preview);
+    @GetMapping("/summary")
+    @Operation(summary = "Get analytics summary",
+        description = "Total clicks, unique visitors, top country/device/referrer/browser")
+    public ResponseEntity<AnalyticsSummaryResponse> getSummary(
+        @PathVariable String slug,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        @Parameter(description = "Start date (default: 30 days ago)") LocalDate from,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        @Parameter(description = "End date (default: today)") LocalDate to
+    ) {
+        DateRange range = resolveDateRange(from, to);
+        return ResponseEntity.ok(analyticsService.getSummary(slug, range.from(), range.to()));
+    }
+
+    // ═══ TIME SERIES ═══
+
+    @GetMapping("/timeseries")
+    @Operation(summary = "Get clicks over time",
+        description = "Time series data with configurable granularity: HOUR, DAY, WEEK, MONTH")
+    public ResponseEntity<TimeSeriesResponse> getTimeSeries(
+        @PathVariable String slug,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+        @RequestParam(defaultValue = "DAY")
+        @Parameter(description = "HOUR, DAY, WEEK, or MONTH") Granularity granularity
+    ) {
+        DateRange range = resolveDateRange(from, to);
+        return ResponseEntity.ok(
+            analyticsService.getTimeSeries(slug, range.from(), range.to(), granularity));
+    }
+
+    // ═══ GEO ═══
+
+    @GetMapping("/geo")
+    @Operation(summary = "Get geographic analytics",
+        description = "Click distribution by country and city")
+    public ResponseEntity<GeoAnalyticsResponse> getGeoAnalytics(
+        @PathVariable String slug,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+        @RequestParam(defaultValue = "10") int limit
+    ) {
+        DateRange range = resolveDateRange(from, to);
+        return ResponseEntity.ok(
+            analyticsService.getGeoAnalytics(slug, range.from(), range.to(), limit));
+    }
+
+    // ═══ DEVICES ═══
+
+    @GetMapping("/devices")
+    @Operation(summary = "Get device analytics",
+        description = "Breakdown by device type, browser, and OS")
+    public ResponseEntity<DeviceAnalyticsResponse> getDeviceAnalytics(
+        @PathVariable String slug,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
+    ) {
+        DateRange range = resolveDateRange(from, to);
+        return ResponseEntity.ok(
+            analyticsService.getDeviceAnalytics(slug, range.from(), range.to()));
+    }
+
+    // ═══ REFERRERS ═══
+
+    @GetMapping("/referrers")
+    @Operation(summary = "Get referrer analytics",
+        description = "Click sources by referring domain")
+    public ResponseEntity<ReferrerAnalyticsResponse> getReferrerAnalytics(
+        @PathVariable String slug,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+        @RequestParam(defaultValue = "10") int limit
+    ) {
+        DateRange range = resolveDateRange(from, to);
+        return ResponseEntity.ok(
+            analyticsService.getReferrerAnalytics(slug, range.from(), range.to(), limit));
+    }
+
+    // ═══ RAW CLICKS ═══
+
+    @GetMapping("/clicks")
+    @Operation(summary = "Get raw click log",
+        description = "Paginated list of individual click events")
+    public ResponseEntity<Page<ClickDetailResponse>> getRawClicks(
+        @PathVariable String slug,
+        @PageableDefault(size = 50) Pageable pageable
+    ) {
+        return ResponseEntity.ok(analyticsService.getRawClicks(slug, pageable));
+    }
+
+    // ═══ Helper ═══
+
+    private DateRange resolveDateRange(LocalDate from, LocalDate to) {
+        LocalDate effectiveTo   = (to != null) ? to : LocalDate.now();
+        LocalDate effectiveFrom = (from != null) ? from : effectiveTo.minusDays(30);
+
+        // Cap max range to 365 days
+        if (effectiveFrom.isBefore(effectiveTo.minusDays(365))) {
+            effectiveFrom = effectiveTo.minusDays(365);
         }
 
-        // ── Redirect mode ──
-        log.debug("Redirect request for slug: {}", slug);
-        String originalUrl = redirectService.resolveAndTrack(slug);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setLocation(URI.create(originalUrl));
-        // Cache-Control: prevent browsers from caching the redirect
-        // so each visit is tracked
-        headers.setCacheControl("no-cache, no-store, must-revalidate");
-        headers.setPragma("no-cache");
-
-        return new ResponseEntity<>(headers, HttpStatus.FOUND); // 302
+        return new DateRange(
+            effectiveFrom.atStartOfDay().toInstant(ZoneOffset.UTC),
+            effectiveTo.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC)
+        );
     }
 
-    /**
-     * Explicit preview endpoint (alternative to /{slug}+).
-     * <p>
-     * This endpoint is hidden from Swagger to avoid confusion
-     * with the /{slug}+ pattern.
-     */
-    @Hidden
-    @GetMapping("/api/v1/urls/{slug}/preview")
-    public ResponseEntity<LinkPreviewResponse> preview(
-        @PathVariable String slug) {
-
-        LinkPreviewResponse preview = redirectService.getPreview(slug);
-        return ResponseEntity.ok(preview);
-    }
+    private record DateRange(Instant from, Instant to) {}
 }

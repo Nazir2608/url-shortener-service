@@ -19,6 +19,7 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
 
+  # --- Virtual Threads (Java 21) ---
   threads:
     virtual:
       enabled: true
@@ -61,3 +62,21 @@ springdoc:
     path: /swagger-ui.html
     operations-sorter: method
     tags-sorter: alpha
+
+# --- GeoIP Configuration ---
+geoip:
+  enabled: true
+  database-path: classpath:maxmind/GeoLite2-City.mmdb
+
+
+  # --- Scheduling Thread Pool ---
+  task:
+    scheduling:
+      pool:
+        size: 2
+
+# --- Analytics Defaults ---
+analytics:
+  default-range-days: 30
+  max-range-days: 365
+  time-series-max-points: 500

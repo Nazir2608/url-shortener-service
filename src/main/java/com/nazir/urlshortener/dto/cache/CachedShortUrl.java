@@ -1,5 +1,6 @@
 package com.nazir.urlshortener.dto.cache;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.nazir.urlshortener.domain.ShortUrl;
 
 import java.io.Serializable;
@@ -31,6 +32,7 @@ import java.util.UUID;
  * @param expiresAt         expiration timestamp (null = never)
  * @param passwordProtected whether a password is required
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record CachedShortUrl(UUID id, String slug, String originalUrl, boolean active,
     LocalDateTime expiresAt, boolean passwordProtected) implements Serializable {
 

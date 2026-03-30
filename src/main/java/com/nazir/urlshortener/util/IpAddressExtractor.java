@@ -3,42 +3,54 @@ package com.nazir.urlshortener.util;
 import jakarta.servlet.http.HttpServletRequest;
 
 /**
- * Extracts the real client IP address from HTTP requests,
- * handling reverse proxies and load balancers.
- * <p>
- * Checks headers in priority order:
- * X-Forwarded-For → X-Real-IP → Remote-Addr
+ * Extracts the real client IP address, handling reverse proxies and load balancers.
+ *
+ * Priority:
+ *   1. X-Forwarded-For (first IP in comma-separated chain)
+ *   2. X-Real-IP
+ *   3. request.getRemoteAddr()
  */
 public final class IpAddressExtractor {
 
-    private static final String[] PROXY_HEADERS = {
+    private static final String[] HEADER_CANDIDATES = {
         "X-Forwarded-For",
         "X-Real-IP",
         "Proxy-Client-IP",
         "WL-Proxy-Client-IP",
         "HTTP_X_FORWARDED_FOR",
-        "HTTP_CLIENT_IP"
+        "HTTP_X_REAL_IP"
     };
 
     private IpAddressExtractor() {
-        // Utility class
+        // utility class — no instantiation
     }
 
-    /**
-     * Extract client IP from request, handling proxy headers.
-     *
-     * @param request the HTTP request
-     * @return client IP address string
-     */
     public static String extract(HttpServletRequest request) {
-        for (String header : PROXY_HEADERS) {
-            String ip = request.getHeader(header);
-            if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
-                // X-Forwarded-For may contain comma-separated list: client, proxy1, proxy2
-                // First IP is the real client
-                return ip.split(",")[0].trim();
+        for (String header : HEADER_CANDIDATES) {
+            String value = request.getHeader(header);
+            if (value != null && !value.isBlank() && !"unknown".equalsIgnoreCase(value)) {
+                // X-Forwarded-For: "client, proxy1, proxy2" → take first
+                return value.split(",")[0].trim();
             }
         }
         return request.getRemoteAddr();
+    }
+
+    /**
+     * Returns true if the IP is private/loopback.
+     * GeoIP databases have no data for these addresses.
+     */
+    public static boolean isPrivateIp(String ip) {
+        if (ip == null) return true;
+        return ip.startsWith("127.")
+            || ip.startsWith("10.")
+            || ip.startsWith("192.168.")
+            || ip.startsWith("172.16.") || ip.startsWith("172.17.")
+            || ip.startsWith("172.18.") || ip.startsWith("172.19.")
+            || ip.startsWith("172.2")   || ip.startsWith("172.30.")
+            || ip.startsWith("172.31.")
+            || "0:0:0:0:0:0:0:1".equals(ip)
+            || "::1".equals(ip)
+            || "0.0.0.0".equals(ip);
     }
 }

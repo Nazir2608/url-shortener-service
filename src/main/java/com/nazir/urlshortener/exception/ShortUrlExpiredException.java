@@ -1,8 +1,11 @@
 package com.nazir.urlshortener.exception;
 
-public class ShortUrlExpiredException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
-    public ShortUrlExpiredException(String slug) {
-        super("Short URL has expired: " + slug);
+@ResponseStatus(HttpStatus.GONE)  // 410
+public class ShortUrlExpiredException extends RuntimeException {
+    public ShortUrlExpiredException(String message) {
+        super(message);
     }
 }
