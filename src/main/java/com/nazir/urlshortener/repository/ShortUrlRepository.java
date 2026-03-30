@@ -41,20 +41,20 @@ public interface ShortUrlRepository extends JpaRepository<ShortUrl, UUID> {
     @Modifying
     @Transactional
     @Query("""
-        UPDATE ShortUrl s SET s.isActive = false
+        UPDATE ShortUrl s SET s.active = false
         WHERE s.expiresAt IS NOT NULL
           AND s.expiresAt < :now
-          AND s.isActive = true
+          AND s.active = true
         """)
     int deactivateExpiredUrls(@Param("now") Instant now);
 
     @Modifying
     @Transactional
     @Query("""
-        UPDATE ShortUrl s SET s.isActive = false
+        UPDATE ShortUrl s SET s.active = false
         WHERE s.maxClicks IS NOT NULL
           AND s.clickCount >= s.maxClicks
-          AND s.isActive = true
+          AND s.active = true
         """)
     int deactivateOverLimitUrls();
 

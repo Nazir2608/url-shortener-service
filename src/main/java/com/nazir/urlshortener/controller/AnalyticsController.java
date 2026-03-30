@@ -1,5 +1,4 @@
 package com.nazir.urlshortener.controller;
-
 import com.nazir.urlshortener.domain.enums.Granularity;
 import com.nazir.urlshortener.dto.response.*;
 import com.nazir.urlshortener.service.AnalyticsService;

@@ -1,6 +1,8 @@
 package com.nazir.urlshortener.domain;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -9,6 +11,8 @@ import java.util.UUID;
  * Pre-aggregated daily statistics per URL.
  * Populated nightly by DailyStatsJob.
  */
+@Getter
+@Setter
 @Entity
 @Table(
     name = "daily_stats",
@@ -26,7 +30,7 @@ public class DailyStat {
     @Column(name = "short_url_id", nullable = false)
     private UUID shortUrlId;
 
-    @Column(name = "date", nullable = false)
+    @Column(name = "stat_date", nullable = false)
     private LocalDate date;
 
     @Column(name = "click_count", nullable = false)
@@ -62,15 +66,6 @@ public class DailyStat {
     }
 
     // ═══ Getters ═══
-
-    public Long getId()              { return id; }
-    public UUID getShortUrlId()      { return shortUrlId; }
-    public LocalDate getDate()       { return date; }
-    public int getClickCount()       { return clickCount; }
-    public int getUniqueVisitors()   { return uniqueVisitors; }
-    public String getTopCountry()    { return topCountry; }
-    public String getTopDevice()     { return topDevice; }
-    public String getTopReferrer()   { return topReferrer; }
 
     // ═══ Setters for aggregation updates ═══
 

@@ -67,9 +67,6 @@ public class ShortUrl {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Column(name = "is_active", nullable = false)
-    private boolean isActive = true;
-
     // ── domain helpers ──
 
     /**
