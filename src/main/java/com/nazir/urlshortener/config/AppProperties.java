@@ -2,6 +2,7 @@ package com.nazir.urlshortener.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.time.Duration;
 import java.util.List;
 
 /**
@@ -18,17 +19,9 @@ import java.util.List;
  * </pre>
  */
 @ConfigurationProperties(prefix = "app")
-public record AppProperties(
-    String baseUrl,
-    SlugProperties slug,
-    CorsProperties cors
-) {
+public record AppProperties(String baseUrl, SlugProperties slug, CorsProperties cors,CacheProperties cache) {
 
-    public record SlugProperties(
-        int defaultLength,
-        int minCustomLength,
-        int maxCustomLength
-    ) {
+    public record SlugProperties(int defaultLength, int minCustomLength, int maxCustomLength) {
         /**
          * Provide sensible defaults if not configured.
          */
@@ -39,11 +32,48 @@ public record AppProperties(
         }
     }
 
-    public record CorsProperties(
-        List<String> allowedOrigins
-    ) {
+    public record CorsProperties(List<String> allowedOrigins) {
         public CorsProperties {
             if (allowedOrigins == null) allowedOrigins = List.of("http://localhost:3000");
         }
     }
+
+    /**
+     * Cache configuration properties.
+     *
+     * <pre>
+     * app:
+     *   cache:
+     *     url-ttl-hours: 24
+     *     analytics-ttl-minutes: 5
+     *     key-prefix: "urlshortener:"
+     * </pre>
+     *
+     * @param urlTtlHours         TTL for cached slug→URL mappings (default: 24)
+     * @param analyticsTtlMinutes TTL for cached analytics responses (default: 5)
+     * @param keyPrefix           Redis key prefix (default: "urlshortener:")
+     */
+    public record CacheProperties(int urlTtlHours, int analyticsTtlMinutes, String keyPrefix) {
+        public CacheProperties {
+            if (urlTtlHours <= 0) urlTtlHours = 24;
+            if (analyticsTtlMinutes <= 0) analyticsTtlMinutes = 5;
+            if (keyPrefix == null || keyPrefix.isBlank()) keyPrefix = "urlshortener:";
+        }
+
+        /**
+         * Convenience method: URL cache TTL as Duration.
+         */
+        public Duration urlTtl() {
+            return Duration.ofHours(urlTtlHours);
+        }
+
+        /**
+         * Convenience method: Analytics cache TTL as Duration.
+         */
+        public Duration analyticsTtl() {
+            return Duration.ofMinutes(analyticsTtlMinutes);
+        }
+    }
+
+
 }
